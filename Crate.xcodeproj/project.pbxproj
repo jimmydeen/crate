@@ -18,6 +18,11 @@
 		696B2A8F29F570B800C498A2 /* AlbumData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 696B2A8E29F570B800C498A2 /* AlbumData.swift */; };
 		696B2A9129F62C4700C498A2 /* SearchTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 696B2A9029F62C4700C498A2 /* SearchTableViewController.swift */; };
 		696B2A9429F6370700C498A2 /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 696B2A9329F6370700C498A2 /* Kingfisher */; };
+		6994614C2A00CD5600869527 /* SearchResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6994614B2A00CD5600869527 /* SearchResponse.swift */; };
+		6994614F2A01086A00869527 /* SimpleAlbumData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6994614E2A01086A00869527 /* SimpleAlbumData.swift */; };
+		69B2BA3F2A039A01008EF9D8 /* AlbumDetailsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69B2BA3E2A039A01008EF9D8 /* AlbumDetailsViewController.swift */; };
+		69B2BA412A039D79008EF9D8 /* AlbumDetailsDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69B2BA402A039D79008EF9D8 /* AlbumDetailsDelegate.swift */; };
+		69B2BA432A054ED8008EF9D8 /* Authenticator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69B2BA422A054ED8008EF9D8 /* Authenticator.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -33,6 +38,11 @@
 		696B2A8C29F5706300C498A2 /* CollectionData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionData.swift; sourceTree = "<group>"; };
 		696B2A8E29F570B800C498A2 /* AlbumData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumData.swift; sourceTree = "<group>"; };
 		696B2A9029F62C4700C498A2 /* SearchTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchTableViewController.swift; sourceTree = "<group>"; };
+		6994614B2A00CD5600869527 /* SearchResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchResponse.swift; sourceTree = "<group>"; };
+		6994614E2A01086A00869527 /* SimpleAlbumData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleAlbumData.swift; sourceTree = "<group>"; };
+		69B2BA3E2A039A01008EF9D8 /* AlbumDetailsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumDetailsViewController.swift; sourceTree = "<group>"; };
+		69B2BA402A039D79008EF9D8 /* AlbumDetailsDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlbumDetailsDelegate.swift; sourceTree = "<group>"; };
+		69B2BA422A054ED8008EF9D8 /* Authenticator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Authenticator.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -77,6 +87,11 @@
 				696B2A8E29F570B800C498A2 /* AlbumData.swift */,
 				696B2A9029F62C4700C498A2 /* SearchTableViewController.swift */,
 				6940EFF829F8E5540092F70D /* OAuth2PKCEAuthenticator.swift */,
+				6994614B2A00CD5600869527 /* SearchResponse.swift */,
+				6994614E2A01086A00869527 /* SimpleAlbumData.swift */,
+				69B2BA3E2A039A01008EF9D8 /* AlbumDetailsViewController.swift */,
+				69B2BA402A039D79008EF9D8 /* AlbumDetailsDelegate.swift */,
+				69B2BA422A054ED8008EF9D8 /* Authenticator.swift */,
 			);
 			path = Crate;
 			sourceTree = "<group>";
@@ -158,10 +173,15 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6994614F2A01086A00869527 /* SimpleAlbumData.swift in Sources */,
 				6940EFF929F8E5540092F70D /* OAuth2PKCEAuthenticator.swift in Sources */,
+				69B2BA3F2A039A01008EF9D8 /* AlbumDetailsViewController.swift in Sources */,
 				696B2A7D29F2288400C498A2 /* ViewController.swift in Sources */,
 				696B2A9129F62C4700C498A2 /* SearchTableViewController.swift in Sources */,
 				696B2A8F29F570B800C498A2 /* AlbumData.swift in Sources */,
+				6994614C2A00CD5600869527 /* SearchResponse.swift in Sources */,
+				69B2BA412A039D79008EF9D8 /* AlbumDetailsDelegate.swift in Sources */,
+				69B2BA432A054ED8008EF9D8 /* Authenticator.swift in Sources */,
 				696B2A8D29F5706300C498A2 /* CollectionData.swift in Sources */,
 				696B2A7929F2288400C498A2 /* AppDelegate.swift in Sources */,
 				696B2A7B29F2288400C498A2 /* SceneDelegate.swift in Sources */,

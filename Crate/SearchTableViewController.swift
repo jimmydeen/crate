@@ -8,12 +8,18 @@
 import UIKit
 import Kingfisher
 
+enum HrefError: Error {
+    case MissingURL
+}
+
 class SearchTableViewController: UITableViewController, UISearchBarDelegate {
     
     let clientID = "3df19c42306e4256863747c6f43bb7b3"
     let clientSecret = "a94ede4677104b38a3c98333ac4c801c"
     let baseURL = "https://api.spotify.com/v1"
     
+    let ALBUM_SCOPE = 0
+    let ARTIST_SCOPE = 1
     
     let MAX_ITEMS_PER_REQUEST = 40
     let MAX_REQUESTS = 10
@@ -23,8 +29,10 @@ class SearchTableViewController: UITableViewController, UISearchBarDelegate {
     let REQUEST_STRING_HEAD = "https://api.spotify.com/v1/search?query="
     let REQUEST_STRING_TAIL = "&type=album&market=AU&locale=en-US%2Cen%3Bq%3D0.9%2Cko%3Bq%3D0.8&offset=0&limit=20"
     
-    var newAlbums = [AlbumData]()
+    var newAlbums = [SimpleAlbumData]()
     var indicator = UIActivityIndicatorView()
+    
+    var delegate: AlbumDetailsDelegate?
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -36,6 +44,7 @@ class SearchTableViewController: UITableViewController, UISearchBarDelegate {
         
         
         let searchController = UISearchController(searchResultsController: nil)
+        searchController.searchBar.scopeButtonTitles = ["Albums", "Artists"]
         searchController.searchBar.delegate = self
         searchController.obscuresBackgroundDuringPresentation = false
         searchController.searchBar.placeholder = "Search"
@@ -72,8 +81,13 @@ class SearchTableViewController: UITableViewController, UISearchBarDelegate {
         let cell = tableView.dequeueReusableCell(withIdentifier: CELL_ALBUM, for: indexPath)
         let album = newAlbums[indexPath.row]
         var content = cell.defaultContentConfiguration()
-        content.text = album.title
+        
+        content.text = album.name
         content.secondaryText = album.artistNames
+        
+        cell.contentConfiguration = content
+//        cell.textLabel
+//        content.secondaryText = album.artistNames
 //        let url = URL(string: album.coverURL)
 //        content.image
 //        content.image = imageView.kf.setImage(with: url, placeholder: nil)
@@ -81,6 +95,69 @@ class SearchTableViewController: UITableViewController, UISearchBarDelegate {
         return cell
     }
     
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let album = newAlbums[indexPath.row]
+        let apiLink = album.href
+//        getFullAlbum(href: apiLink)
+        
+        
+        delegate?.sendAlbumDetails(albumURL: apiLink)
+        tableView.deselectRow(at: indexPath, animated: true)
+    }
+    
+//    func getFullAlbum(href: String) async throws-> AlbumData{
+//        
+////        var searchURLComponents = URLComponents()
+////        searchURLComponents.scheme = "https"
+////        searchURLComponents.host = "api.spotify.com"
+////        searchURLComponents.path = "/v1/albums/("
+////        guard let requestURL = searchURLComponents.url else {
+////            print("Invalid URL.")
+////            return
+////        }
+////
+////
+//        do {
+//            let accessToken = try await authenticate()
+//            
+////            var urlRequest = URLRequest(url: href)
+////            urlRequest.httpMethod = "GET"
+////
+////            urlRequest.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+//            
+//            
+////            var url = URL(string: href)
+//            guard let url = URL(string: href) else {
+//                print("error, invalid url")
+//                throw HrefError.MissingURL
+//            }
+//            
+//            let (data, response) =
+//                try await URLSession.shared.data(from: url)
+//            print("data:",String(describing: data), "response:", response)
+////
+////            let jsonData = data.data(using: String.Encoding.utf8)
+////
+////            if JSONSerialization.isValidJSONObject(jsonData) {
+////                print("Valid Json")
+////            } else {
+////                print("InValid Json")
+////            }
+//            DispatchQueue.main.async {
+//                self.indicator.stopAnimating()
+//            }
+//            let decoder = JSONDecoder()
+//            
+//            
+//            let albumData = try decoder.decode(AlbumData.self, from: data)
+//            
+//            return albumData
+//            
+//        }
+//        catch let error {
+//            print(error)
+//        }
+//    }
 
     /*
     // Override to support conditional editing of the table view.
@@ -117,20 +194,24 @@ class SearchTableViewController: UITableViewController, UISearchBarDelegate {
     }
     */
 
-    /*
+    
     // MARK: - Navigation
 
     // In a storyboard-based application, you will often want to do a little preparation before navigation
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "showDetails"{
+            let albumDetailsView = segue.destination as! AlbumDetailsViewController
+            self.delegate = albumDetailsView
+        }
         // Get the new view controller using segue.destination.
         // Pass the selected object to the new view controller.
     }
-    */
     
-    func requestAlbumsNamed(_ albumName: String) async {
+    
+    func requestAlbumsNamed(_ albumName: String,_ scope: String) async {
 
        
-    
+        
         
        
 
@@ -140,15 +221,17 @@ class SearchTableViewController: UITableViewController, UISearchBarDelegate {
         searchURLComponents.path = "/v1/search"
         searchURLComponents.queryItems = [
             //search for albums only
-            URLQueryItem(name: "type", value: "album"),
+            URLQueryItem(name: "q", value: "\(albumName)"),
+            URLQueryItem(name: "type", value: "\(scope)"),
             URLQueryItem(name: "limit", value: "\(MAX_ITEMS_PER_REQUEST)"),
-            URLQueryItem(name: "offset", value: "\(currentRequestIndex * MAX_ITEMS_PER_REQUEST)"),
-            URLQueryItem(name: "q", value: albumName)
+            URLQueryItem(name: "offset", value: "\(currentRequestIndex * MAX_ITEMS_PER_REQUEST)")
+            
         ]
         guard let requestURL = searchURLComponents.url else {
             print("Invalid URL.")
             return
         }
+//        print(requestURL)
 //        let token = "your token"
         
         
@@ -163,18 +246,33 @@ class SearchTableViewController: UITableViewController, UISearchBarDelegate {
             let accessToken = try await authenticate()
             
             var urlRequest = URLRequest(url: requestURL)
-            urlRequest.addValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+            urlRequest.httpMethod = "GET"
+            
+            urlRequest.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
             
             
             let (data, response) =
                 try await URLSession.shared.data(for: urlRequest)
+            print("data:",String(describing: data), "response:", response)
+//
+//            let jsonData = data.data(using: String.Encoding.utf8)
+//
+//            if JSONSerialization.isValidJSONObject(jsonData) {
+//                print("Valid Json")
+//            } else {
+//                print("InValid Json")
+//            }
             DispatchQueue.main.async {
                 self.indicator.stopAnimating()
             }
             let decoder = JSONDecoder()
-            let collectionData = try decoder.decode(CollectionData.self, from: data)
             
-            if let albums = collectionData.albums {
+            
+            let searchResponse = try decoder.decode(SearchResponse.self, from: data)
+            print(searchResponse)
+//            print(collectionData.albums)
+            if let albums = searchResponse.albumList {
+//                print(albums)
                 newAlbums.append(contentsOf: albums)
                 
                 DispatchQueue.main.async {
@@ -183,7 +281,7 @@ class SearchTableViewController: UITableViewController, UISearchBarDelegate {
                 if albums.count == MAX_ITEMS_PER_REQUEST,
                     currentRequestIndex + 1 < MAX_REQUESTS {
                     currentRequestIndex += 1
-                    await requestAlbumsNamed(albumName)
+                    await requestAlbumsNamed(albumName, scope)
                 }
             }
             
@@ -200,13 +298,19 @@ class SearchTableViewController: UITableViewController, UISearchBarDelegate {
         guard let searchText = searchBar.text, !searchText.isEmpty else {
             return
         }
+        let scope: String
+        if searchBar.selectedScopeButtonIndex == ALBUM_SCOPE {
+            scope = "album"
+        } else {
+            scope = "artist"
+        }
         
         navigationItem.searchController?.dismiss(animated: true)
         indicator.startAnimating()
         Task {
             URLSession.shared.invalidateAndCancel()
             currentRequestIndex = 0
-            await requestAlbumsNamed(searchText)
+            await requestAlbumsNamed(searchText, scope)
         }
     }
     
@@ -217,6 +321,7 @@ class SearchTableViewController: UITableViewController, UISearchBarDelegate {
         }
         let authURL = URL(string: "https://accounts.spotify.com/api/token")!
         var request = URLRequest(url: authURL)
+        
         request.httpMethod = "POST"
         let authData = "\(clientID):\(clientSecret)".data(using: .utf8)
         let authString = authData?.base64EncodedString()
@@ -232,8 +337,45 @@ class SearchTableViewController: UITableViewController, UISearchBarDelegate {
         guard let accessToken = json["access_token"] as? String else {
             throw SpotifyError.authenticationFailed
         }
+        print("token:", accessToken)
         return accessToken
     }
+    func searchBar(_ searchBar: UISearchBar, selectedScopeButtonIndexDidChange selectedScope: Int) {
+        searchBarTextDidEndEditing(searchBar)
+        print("scope is \(selectedScope)")
+    }
+//    func getAlbumCover(imageURL: String){
+//        let requestURL = URL(string: imageURL)!
+//        Task {
+//            print("Downloading image: " + imageURL)
+////            imageDownloading = true
+//            do {
+//                let (data, response) = try await URLSession.shared.data(from: requestURL)
+//                guard let httpResponse = response as? HTTPURLResponse,
+//                      httpResponse.statusCode == 200 else {
+////                    imageDownloading = false
+//                    throw LoadCoverError.invalidServerResponse
+//                }
+//
+//                if let image = UIImage(data: data) {
+//                    print("Image downloaded")
+//                    return image
+////                    bookCover.image = image
+//                    await MainActor.run {
+//                    }
+//                }
+//                else {
+//                    print("Image invalid")
+////                    imageDownloading = false
+//                }
+//            }
+//            catch {
+//                print(error.localizedDescription)
+//            }
+//        }
+//    }
+//
+//
 
 }
 
