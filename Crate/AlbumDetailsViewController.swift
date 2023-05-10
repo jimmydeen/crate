@@ -2,174 +2,47 @@
 //  AlbumDetailsViewController.swift
 //  Crate
 //
-//  Created by JD Chiang on 4/5/2023.
+//  Created by JD Chiang on 7/5/2023.
 //
 
 import UIKit
 
-
-class AlbumDetailsViewController: UITableViewController, AlbumDetailsDelegate {
-    
+class AlbumDetailsViewController: UIViewController, AlbumDetailsDelegate {
+   
     var indicator = UIActivityIndicatorView()
-    var imageDownloading: Bool = false
-    var currentAlbum: AlbumData?
-    var url: String?
+    
+    var albumUrl: String?
+    
     
     @IBOutlet weak var albumCover: UIImageView!
     
     @IBOutlet weak var albumTitle: UILabel!
     
-    @IBOutlet weak var artistName: UILabel!
+    @IBOutlet weak var artistNames: UILabel!
     
     @IBOutlet weak var releaseDate: UILabel!
     
-    @IBOutlet weak var upc: UILabel!
+    @IBOutlet weak var albumType: UILabel!
+    
+    @IBOutlet weak var label: UILabel!
     
     @IBOutlet weak var ean: UILabel!
     
-    @IBOutlet weak var albumType: UILabel!
-    
-    
     override func viewDidLoad() {
         super.viewDidLoad()
-        indicator.startAnimating()
+        indicator.style = UIActivityIndicatorView.Style.medium
+        indicator.translatesAutoresizingMaskIntoConstraints = false
+        self.view.addSubview(indicator)
+        NSLayoutConstraint.activate([
+        indicator.centerXAnchor.constraint(equalTo:
+        view.safeAreaLayoutGuide.centerXAnchor),
+        indicator.centerYAnchor.constraint(equalTo:
+        view.safeAreaLayoutGuide.centerYAnchor)
+        ])
 
-        // Uncomment the following line to preserve selection between presentations
-        // self.clearsSelectionOnViewWillAppear = false
-
-        // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
-        // self.navigationItem.rightBarButtonItem = self.editButtonItem
-//        guard let album = currentAlbum else {
-//            return
-//        }
-        
-        guard let url else {
-            return
-        }
-        
-//        guard let image
-        
-//        self.setAlbumDetails(album: album)
-        
+        // Do any additional setup after loading the view.
     }
-
-    // MARK: - Table view data source
-
-    override func numberOfSections(in tableView: UITableView) -> Int {
-        // #warning Incomplete implementation, return the number of sections
-        return 0
-    }
-
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        // #warning Incomplete implementation, return the number of rows
-        return 0
-    }
-    func fetchAlbumFromURL(url: String) async{
-        do {
-            let authenticator = Authenticator()
-            let accessToken = try await authenticator.authenticate()
-            
-//            var urlRequest = URLRequest(url: href)
-//            urlRequest.httpMethod = "GET"
-//
-//            urlRequest.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
-            
-            
-//            var url = URL(string: href)
-            guard let url = URL(string: url) else {
-                print("error, invalid url")
-                throw HrefError.MissingURL
-            }
-            
-            let (data, response) =
-                try await URLSession.shared.data(from: url)
-            print("data:",String(describing: data), "response:", response)
-//
-//            let jsonData = data.data(using: String.Encoding.utf8)
-//
-//            if JSONSerialization.isValidJSONObject(jsonData) {
-//                print("Valid Json")
-//            } else {
-//                print("InValid Json")
-//            }
-            DispatchQueue.main.async {
-                self.indicator.stopAnimating()
-            }
-            let decoder = JSONDecoder()
-            
-            
-            let albumData = try decoder.decode(AlbumData.self, from: data)
-            
-            self.currentAlbum = albumData
-            
-        }
-        catch let error {
-            print(error)
-        }
-    }
-//    func setAlbumDetails(album: AlbumData) {
-//        guard let url else {
-//            return
-//        }
-//        fetchAlbumFromURL(url: url)
-//        guard let artists = album.artistNames else {
-//            return
-//        }
-//
-//        albumTitle.text = album.title
-//        artistName.text = artists
-//        releaseDate.text = album.releaseDate
-//        albumType.text = album.albumType
-//    }
     
-    func sendAlbumDetails(albumURL: String) {
-        url = albumURL
-    }
-
-    /*
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "reuseIdentifier", for: indexPath)
-
-        // Configure the cell...
-
-        return cell
-    }
-    */
-
-    /*
-    // Override to support conditional editing of the table view.
-    override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
-        // Return false if you do not want the specified item to be editable.
-        return true
-    }
-    */
-
-    /*
-    // Override to support editing the table view.
-    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
-        if editingStyle == .delete {
-            // Delete the row from the data source
-            tableView.deleteRows(at: [indexPath], with: .fade)
-        } else if editingStyle == .insert {
-            // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
-        }    
-    }
-    */
-
-    /*
-    // Override to support rearranging the table view.
-    override func tableView(_ tableView: UITableView, moveRowAt fromIndexPath: IndexPath, to: IndexPath) {
-
-    }
-    */
-
-    /*
-    // Override to support conditional rearranging of the table view.
-    override func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
-        // Return false if you do not want the item to be re-orderable.
-        return true
-    }
-    */
 
     /*
     // MARK: - Navigation
@@ -180,5 +53,98 @@ class AlbumDetailsViewController: UITableViewController, AlbumDetailsDelegate {
         // Pass the selected object to the new view controller.
     }
     */
+    
+    override func viewWillAppear(_ animated: Bool) {
+        indicator.startAnimating()
+        Task {
+            URLSession.shared.invalidateAndCancel()
+            if let albumUrl {
+                await getAlbumDetails(albumURL: albumUrl)
+            }
+        }
+    }
+    
+    func sendAlbumDetails(albumURL: String) {
+        self.albumUrl = albumURL
+    }
+    
+    func getAlbumDetails(albumURL: String) async {
+        
+        guard let requestURL = URL(string: albumURL) else {
+            print("Invalid URL.")
+            return
+        }
 
+        do {
+            let accessToken = try await Authenticator().authenticate()
+            
+            var urlRequest = URLRequest(url: requestURL)
+            urlRequest.httpMethod = "GET"
+            
+            urlRequest.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+            
+            
+            let (data, response) =
+                try await URLSession.shared.data(for: urlRequest)
+            print("data:",String(describing: data), "response:", response)
+
+            DispatchQueue.main.async {
+                self.indicator.stopAnimating()
+            }
+            let decoder = JSONDecoder()
+            
+            
+            let album = try decoder.decode(AlbumData.self, from: data)
+            
+            setAlbumDetails(album: album)
+            
+////            print(collectionData.albums)
+//            if let albums = searchResponse.albumList {
+////                print(albums)
+//                newAlbums.append(contentsOf: albums)
+//
+//                DispatchQueue.main.async {
+//                    self.tableView.reloadData()
+//                }
+//                if albums.count == MAX_ITEMS_PER_REQUEST,
+//                    currentRequestIndex + 1 < MAX_REQUESTS {
+//                    currentRequestIndex += 1
+//                    await requestAlbumsNamed(albumName, scope)
+//                }
+//            }
+            
+        }
+        catch let error {
+            print(error)
+        }
+    }
+    
+    func setAlbumDetails(album: AlbumData) {
+        guard let artists = album.artistNames else {
+            return
+        }
+
+        albumTitle.text = album.title
+        artistNames.text = artists
+        releaseDate.text = album.releaseDate
+        albumType.text = album.albumType
+        label.text = album.label
+//        if let albumUpc = album.upc, !albumUpc.isEmpty{
+//            upc.text = albumUpc
+//            upc.numberOfLines = 0
+//        }
+        
+        if let albumEan = album.ean, !albumEan.isEmpty{
+            ean.text = albumEan
+            ean.numberOfLines = 0
+        }
+        albumTitle.numberOfLines = 0
+        artistNames.numberOfLines = 0
+        releaseDate.numberOfLines = 0
+        albumType.numberOfLines = 0
+        
+        
+
+    }
+    
 }

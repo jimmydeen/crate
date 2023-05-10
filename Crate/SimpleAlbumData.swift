@@ -10,15 +10,19 @@ import Foundation
 
 import UIKit
 
-struct Artist: Decodable {
-    var id: String
-    var name: String
+enum LoadCoverError: Error {
+    case invalidServerResponse
+    case invalidImage
 }
 
-struct Image: Decodable {
-    var url: String
+enum InitError: Error {
+    case missingCoverURL
 }
+
+
+
 class SimpleAlbumData: NSObject, Decodable {
+    var coverImage: UIImage?
     var spotifyId: String
     var coverURL: String?
     var name: String
@@ -37,13 +41,10 @@ class SimpleAlbumData: NSObject, Decodable {
         
     }
     
-//    private enum ImageKeys: String, CodingKey {
-//        case coverURL = "url"
+
+//    private enum ArtistKeys: String, CodingKey {
+//        case artistNames = "name"
 //    }
-//
-    private enum ArtistKeys: String, CodingKey {
-        case artistNames = "name"
-    }
 
     
     required init(from decoder: Decoder) throws {
@@ -64,6 +65,13 @@ class SimpleAlbumData: NSObject, Decodable {
         name = try rootContainer.decode(String.self, forKey: .name)
  
         coverURL = try rootContainer.decode([Image].self, forKey: .images).last?.url
+        
+        guard coverURL != nil else {
+            throw InitError.missingCoverURL
+        }
+//        let coverImage.image = downloadCover(imageURL: <#T##String#>)
+        
+//        coverImage = downloadCover(imageURL: coverURL)
 //        let imageArray = try rootContainer.decode([Image].self, forKey: .images)
 //        if let URL = imageArray.last?.url {
 //            coverURL = URL
@@ -72,9 +80,33 @@ class SimpleAlbumData: NSObject, Decodable {
 //        if let imageArray = try? rootContainer.decode([Image].self, forKey: .images){
 //           coverURL = imageArray.last?.url
 //        }
-//
-        
-        
+
+    
+        func downloadCover(imageURL: String, completion: @escaping (UIImage?) -> Void) {
+            let requestURL = URL(string: imageURL)!
+            Task {
+                print("Downloading image" + imageURL)
+                do {
+                    let (data, response) = try await URLSession.shared.data(from: requestURL)
+                    guard let httpResponse = response as? HTTPURLResponse,
+                          httpResponse.statusCode == 200 else {
+                        throw LoadCoverError.invalidServerResponse
+                    }
+                    
+                    if let image = UIImage(data: data) {
+                        print("Image download successful")
+                        completion(image)
+                        
+                    } else {
+                        
+                        print("Image invalid")
+                        throw LoadCoverError.invalidImage
+                    }
+                } catch {
+                    print(error.localizedDescription)
+                }
+            }
+        }
         
         
         

@@ -9,7 +9,7 @@ import UIKit
 
 class AlbumData: NSObject, Decodable {
     var spotifyId: String
-    var coverURL: String
+    var coverURL: String?
     var title: String
     var releaseDate: String
     var artistNames: String?
@@ -39,24 +39,28 @@ class AlbumData: NSObject, Decodable {
         case spotifyURL = "spotify"
     }
     
-    private enum ImageKeys: String, CodingKey {
-        case coverURL = "url"
-    }
+//    private enum ImageKeys: String, CodingKey {
+//        case coverURL = "url"
+//    }
     
-    private enum ArtistKeys: String, CodingKey {
-        case artistNames = "name"
-    }
+//    private enum ArtistKeys: String, CodingKey {
+//        case artistNames = "name"
+//    }
     
-    private enum TrackKeys: String, CodingKey {
-        case items
-        
-    }
+//    private enum TrackKeys: String, CodingKey {
+//        case items
+//
+//    }
+//
+//    private enum TrackDetailKeys: String,CodingKey {
+//        case artists
+//        case trackName = "name"
+//    }
     
-    private enum TrackDetailKeys: String,CodingKey {
-        case artists
-        case trackName = "name"
+    private enum ExternalURLKeys: String, CodingKey {
+        case spotify
     }
-    
+//
     private enum IdKeys: String, CodingKey {
         case upc
         case ean
@@ -64,23 +68,39 @@ class AlbumData: NSObject, Decodable {
     
     required init(from decoder: Decoder) throws {
         let rootContainer = try decoder.container(keyedBy: RootKeys.self)
-        let imageContainer = try rootContainer.nestedContainer(keyedBy: ImageKeys.self, forKey: .images)
+//        let imageContainer = try rootContainer.nestedContainer(keyedBy: ImageKeys.self, forKey: .images)
         albumType = try rootContainer.decode(String.self, forKey: .albumType)
-        let tracksRootContainer = try rootContainer.nestedContainer(keyedBy: TrackKeys.self, forKey: .tracks)
-        let trackContainer = try tracksRootContainer.nestedContainer(keyedBy: TrackDetailKeys.self, forKey: .items)
-        let artistContainer = try? rootContainer.nestedContainer(keyedBy: ArtistKeys.self, forKey: .artists)
-        let idContainer = try? rootContainer.nestedContainer(keyedBy: IdKeys.self, forKey: .external_ids)
-        if let artistArray = try? artistContainer?.decode([String].self, forKey: .artistNames){
-            artistNames = artistArray.joined(separator: ", ")
+//        let tracksRootContainer = try rootContainer.nestedContainer(keyedBy: TrackKeys.self, forKey: .tracks)
+//        let trackContainer = try tracksRootContainer.nestedContainer(keyedBy: TrackDetailKeys.self, forKey: .items)
+//        let artistContainer = try? rootContainer.nestedContainer(keyedBy: ArtistKeys.self, forKey: .artists)
+        if let artistArray = try? rootContainer.decode([Artist].self, forKey: .artists){
+            var artistNamesArray: [String] = []
+            for artist in artistArray {
+                artistNamesArray.append(artist.name)
+            }
+            artistNames = artistNamesArray.joined(separator: ", ")
         }
+        let idContainer = try? rootContainer.nestedContainer(keyedBy: IdKeys.self, forKey: .external_ids)
+        
+
         if let genreArray = try? rootContainer.decode([String].self, forKey: .genres){
-            genreNames = genreArray.joined(separator: ", ")
+            if !genreArray.isEmpty {
+                genreNames = genreArray.joined(separator: ", ")
+            }
         }
         spotifyId = try rootContainer.decode(String.self, forKey: .spotifyId)
-        spotifyURL = try rootContainer.decode(String.self, forKey: .external_urls)
-        let imageArray = try imageContainer.decode([String].self, forKey: .coverURL)
+        let externalURLContainer = try rootContainer.nestedContainer(keyedBy: ExternalURLKeys.self, forKey: .external_urls)
+        spotifyURL = try externalURLContainer.decode(String.self, forKey: .spotify)
+//        spotifyURL = try rootContainer.decode(String.self, forKey: .external_urls)
+//        let imageArray = try imageContainer.decode([String].self, forKey: .coverURL)
         //Get largest cover
-        coverURL = imageArray[0]
+//        coverURL = imageArray[0]
+        
+        coverURL = try rootContainer.decode([Image].self, forKey: .images).last?.url
+        
+        guard coverURL != nil else {
+            throw InitError.missingCoverURL
+        }
         label = try rootContainer.decode(String.self, forKey: .label)
         title = try rootContainer.decode(String.self, forKey: .title)
         releaseDate = try rootContainer.decode(String.self, forKey: .releaseDate)
