@@ -96,6 +96,17 @@ class AlbumDetailsViewController: UIViewController, AlbumDetailsDelegate {
             
             let album = try decoder.decode(AlbumData.self, from: data)
             
+            if let coverURL = URL(string: album.coverURL!) {
+                    // Set a placeholder image while the actual image is being downloaded
+    //            UIImage(named: )
+                    
+                    
+                    downloadImage(from: coverURL) { image in
+                        DispatchQueue.main.async {
+                            self.albumCover.image = image
+                        }
+                    }
+                }
             setAlbumDetails(album: album)
             
 ////            print(collectionData.albums)
@@ -138,6 +149,7 @@ class AlbumDetailsViewController: UIViewController, AlbumDetailsDelegate {
             ean.text = albumEan
             ean.numberOfLines = 0
         }
+        
         albumTitle.numberOfLines = 0
         artistNames.numberOfLines = 0
         releaseDate.numberOfLines = 0
@@ -146,5 +158,15 @@ class AlbumDetailsViewController: UIViewController, AlbumDetailsDelegate {
         
 
     }
+    func downloadImage(from url: URL, completion: @escaping (UIImage?) -> Void) {
+            URLSession.shared.dataTask(with: url) { (data, response, error) in
+                if let data = data {
+                    let image = UIImage(data: data)
+                    completion(image)
+                } else {
+                    completion(nil)
+                }
+            }.resume()
+        }
     
 }

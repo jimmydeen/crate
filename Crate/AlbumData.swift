@@ -96,7 +96,7 @@ class AlbumData: NSObject, Decodable {
         //Get largest cover
 //        coverURL = imageArray[0]
         
-        coverURL = try rootContainer.decode([Image].self, forKey: .images).last?.url
+        coverURL = try rootContainer.decode([Image].self, forKey: .images).first?.url
         
         guard coverURL != nil else {
             throw InitError.missingCoverURL
@@ -150,4 +150,30 @@ class AlbumData: NSObject, Decodable {
             }
         }
     } */
+    
+    func downloadCover(imageURL: String, completion: @escaping (UIImage?) -> Void) {
+        let requestURL = URL(string: imageURL)!
+        Task {
+            print("Downloading image" + imageURL)
+            do {
+                let (data, response) = try await URLSession.shared.data(from: requestURL)
+                guard let httpResponse = response as? HTTPURLResponse,
+                      httpResponse.statusCode == 200 else {
+                    throw LoadCoverError.invalidServerResponse
+                }
+                
+                if let image = UIImage(data: data) {
+                    print("Image download successful")
+                    completion(image)
+                    
+                } else {
+                    
+                    print("Image invalid")
+                    throw LoadCoverError.invalidImage
+                }
+            } catch {
+                print(error.localizedDescription)
+            }
+        }
+    }
 }
