@@ -76,7 +76,7 @@ class AlbumDetailsViewController: UIViewController, AlbumDetailsDelegate {
         }
 
         do {
-            let accessToken = try await Authenticator().authenticate()
+            let accessToken = try await Authenticator.authenticate()
             
             var urlRequest = URLRequest(url: requestURL)
             urlRequest.httpMethod = "GET"

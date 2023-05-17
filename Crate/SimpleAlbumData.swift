@@ -64,7 +64,7 @@ class SimpleAlbumData: NSObject, Decodable {
         href = try rootContainer.decode(String.self, forKey: .href)
         name = try rootContainer.decode(String.self, forKey: .name)
  
-        coverURL = try rootContainer.decode([Image].self, forKey: .images).last?.url
+        coverURL = try rootContainer.decode([Image].self, forKey: .images)[1].url
         
         guard coverURL != nil else {
             throw InitError.missingCoverURL
@@ -107,6 +107,8 @@ class SimpleAlbumData: NSObject, Decodable {
                 }
             }
         }
+        
+        
         
         
         

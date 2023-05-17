@@ -10,10 +10,10 @@ import Foundation
 
 class Authenticator {
     
-    let clientID = "3df19c42306e4256863747c6f43bb7b3"
-    let clientSecret = "a94ede4677104b38a3c98333ac4c801c"
+    static let clientID = "3df19c42306e4256863747c6f43bb7b3"
+    static let clientSecret = "a94ede4677104b38a3c98333ac4c801c"
     
-    func authenticate() async throws -> String {
+    static func authenticate() async throws -> String {
         
         enum SpotifyError: Error {
             case authenticationFailed
